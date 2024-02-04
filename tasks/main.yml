@@ -1,0 +1,30 @@
+---
+- name: Install Kong Gateway from Source
+  hosts: localhost
+  become: true
+
+  tasks:
+    - name: Clone Kong repository
+      git:
+        repo: https://github.com/Kong/kong.git
+        dest: /opt/kong
+      tags: install
+
+    - name: Build Kong from source
+      shell: |
+        cd /opt/kong
+        make install
+      tags: install
+
+    - name: Setup auto-start script
+      template:
+        src: kong.service.j2
+        dest: /etc/systemd/system/kong.service
+      notify: Restart Kong Service
+      tags: configure
+
+  handlers:
+    - name: Restart Kong Service
+      systemd:
+        name: kong
+        state: restarted
